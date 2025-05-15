@@ -56,7 +56,7 @@ userSchema.pre("save", async function (next) {
 }); //hash the password before you save it for security purpose
 
 userSchema.methods.isPasswordCorrect = async function (password) {
-  return await bcrypt.compare(this.password, password);
+  return await bcrypt.compare(password, this.password);
 }; //compares hashed and given password to be same
 
 userSchema.methods.generateAccessToken = function () {
@@ -69,7 +69,7 @@ userSchema.methods.generateAccessToken = function () {
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
-      expiresIn: ACCESS_TOKEN_EXPIRY,
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
     }
   );
 };
@@ -79,9 +79,9 @@ userSchema.methods.generateRefreshToken = function () {
     {
       _id: this._id,
     },
-    process.env.ACCESS_TOKEN_SECRET,
+    process.env.REFRESH_TOKEN_SECRET,
     {
-      expiresIn: ACCESS_TOKEN_EXPIRY,
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
     }
   );
 };

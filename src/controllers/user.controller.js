@@ -8,7 +8,7 @@ import { ApiResponse } from "../utils/apiResponse.js";
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
-    const user = await User.findOne(userId);
+    const user = await User.findById(userId);
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
 
@@ -44,8 +44,9 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   //check for avatar file
+  console.log(req.files);
   const avtarLocalPath = req.files?.avatar[0]?.path;
-  const coverImageLocalPath = req.files?.coverImage[0]?.path;
+  const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
   console.log(avtarLocalPath);
   if (!avtarLocalPath) {
     throw new ApiError(400, "Avatar file is required !");
@@ -95,18 +96,19 @@ const loginUser = asyncHandler(async (req, res) => {
   //req body -> user data
   const { userName, email, password } = req.body;
   //username email
-  if (!userName || !email) {
+  if (!userName && !email) {
     throw new ApiError(400, "username or email is required");
   }
   //find user
   const user = await User.findOne({
-    $or: { userName, email },
+    $or: [{ userName }, { email }],
   });
   if (!user) {
     throw new ApiError(404, "User not found!");
   }
   //password check
   const isPasswordValid = await user.isPasswordCorrect(password);
+  console.log(isPasswordValid);
   if (!isPasswordValid) {
     throw new ApiError(401, "Invalid user credentials!");
   }
