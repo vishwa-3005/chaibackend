@@ -1,7 +1,7 @@
-<<<<<<< HEAD
+
 node_modules
 .env
-=======
+
 # Logs
 logs
 *.log
@@ -122,4 +122,4 @@ dist
 .pnp.*
 
 # End of https://mrkandreev.name/snippets/gitignore-generator/#Node
->>>>>>> 5eb1ace (git initialzed again)
+

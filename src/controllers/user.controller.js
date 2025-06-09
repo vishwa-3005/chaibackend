@@ -3,23 +3,25 @@ import { ApiError } from "../utils/apiError.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/apiResponse.js";
+import jwt from "jsonwebtoken";
+import { json } from "express";
 
-/* user registration controller */
-
-const generateAccessAndRefreshToken = async (userId) => {
+const generateAccessAndRefreshTOken = async (userId) => {
   try {
     const user = await User.findById(userId);
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
 
-    //acces token is given to user only
-    //refresh token is given to both user and BD
     user.refreshToken = refreshToken;
+    user.accessToken = accessToken;
     await user.save({ validateBeforeSave: false });
 
     return { accessToken, refreshToken };
   } catch (error) {
-    throw new ApiError(500, "access and refresh token generation failed !");
+    throw new ApiError(
+      500,
+      "something went wrong while generating access and refresh token"
+    );
   }
 };
 
@@ -44,9 +46,8 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   //check for avatar file
-  console.log(req.files);
   const avtarLocalPath = req.files?.avatar[0]?.path;
-  const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
+  const coverImageLocalPath = req.files?.coverImage[0]?.path;
   console.log(avtarLocalPath);
   if (!avtarLocalPath) {
     throw new ApiError(400, "Avatar file is required !");
@@ -90,64 +91,61 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 });
 
-/* user login controller */
+//login controller
 
 const loginUser = asyncHandler(async (req, res) => {
-  //req body -> user data
-  const { userName, email, password } = req.body;
-  //username email
+  //fetch data from req body
+  const { userName, email } = req.body;
+  //username or email
   if (!userName && !email) {
-    throw new ApiError(400, "username or email is required");
+    throw new ApiError(400, "Username or password is required");
   }
   //find user
   const user = await User.findOne({
-    $or: [{ userName }, { email }],
+    $or: [userName, email],
   });
   if (!user) {
     throw new ApiError(404, "User not found!");
   }
-  //password check
-  const isPasswordValid = await user.isPasswordCorrect(password);
-  console.log(isPasswordValid);
-  if (!isPasswordValid) {
-    throw new ApiError(401, "Invalid user credentials!");
+  //check for password
+  const isPassWordValid = await user.isPasswordCorrect(password);
+  if (!isPassWordValid) {
+    throw new ApiError(401, "Invalis credentials");
   }
-  //access and refresh token
-  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+  //access refreshtoken and accesstoken
+  const [accessToken, refreshToken] = await generateAccessAndRefreshTOken(
     user._id
   );
-
-  //send cookie :  info to user
-  const loggedInuser = await User.findById(user._id).select(
+  const loggedInUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
-
-  //we need to set some options before sending cookies
-
   const options = {
     httpOnly: true,
     secure: true,
-  }; //now they are modifiable form frontend and can only be modified from server
-
+  };
+  //send cookie and response
   return res
     .status(200)
-    .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
+    .cookie("accesToken", accessToken, options)
     .json(
       new ApiResponse(
         200,
         {
-          user: loggedInuser,
+          user: loggedInUser,
           accessToken,
           refreshToken,
         },
-        "User logged in succesfully!"
+        "User loggedIn succesfully"
       )
     );
 });
 
-const logOutUser = asyncHandler(async (req, res) => {
-  await User.findByIdAndUpdate(
+//logount controller
+const logoutUser = asyncHandler(async (req, res) => {
+  //clear access and refresh token from cookie
+  //clear tokens from user
+  const loggedOutUser = User.findByIdAndUpdate(
     req.user._id,
     {
       $set: {
@@ -158,7 +156,7 @@ const logOutUser = asyncHandler(async (req, res) => {
       new: true,
     }
   );
-  //refreshToken should be reset
+
   const options = {
     httpOnly: true,
     secure: true,
@@ -166,9 +164,59 @@ const logOutUser = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
-    .json(new ApiResponse(200, {}, "User looged Out succesfully !"));
+    .clearCookie("accessToken", options)
+    .json(new ApiResponse(200, {}, "User logged Out !"));
 });
 
-export { registerUser, loginUser, logOutUser };
+const refreshAccessToken = asyncHandler(async (req, res) => {
+  try {
+    const incomingRefreshToken =
+      req.cookies.refreshToken || req.body.refreshToken;
+
+    if (!incomingRefreshToken) {
+      throw new ApiError(401, "unauthorised request");
+    }
+
+    const decodedToken = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+
+    const user = await User.findById(decodedToken?._id);
+
+    if (!user) {
+      throw new ApiError(401, "invalid refresh token");
+    }
+
+    if (incomingRefreshToken !== user?.refreshToken) {
+      throw new ApiError(401, "Refresh token is expired or used");
+
+      const options = {
+        httpOnly: true,
+        secure: true,
+      };
+
+      const { accessToken, newRefreshToken } =
+        await generateAccessAndRefreshTOken(user._id);
+
+      return res
+        .status(200)
+        .cookie("refreshToken", newRefreshToken, options)
+        .cookie("accessToken", accessToken, options)
+        .json(
+          new ApiResponse(
+            200,
+            {
+              accessToken,
+              refreshToken: newRefreshToken,
+            },
+            "Access token refreshed successfully"
+          )
+        );
+    }
+  } catch (error) {
+    throw new ApiError(401, error.message || "invalid refresh token");
+  }
+});
+export { registerUser, loginUser, logoutUser, refreshAccessToken };
