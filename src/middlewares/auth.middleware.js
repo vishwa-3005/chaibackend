@@ -1,8 +1,9 @@
 import { ApiError } from "../utils/apiError.js";
 import asyncHandler from "../utils/asyncHandlers.js";
 import jwt from "jsonwebtoken";
-import { User } from "../models/user.model.js";
-export const verifyJWT = asyncHandler(async (req, res, next) => {
+
+const verifyJWT = asyncHandeler(async (req, _, next) => {
+  //when param was not used, it was replaced with underscore
   try {
     const token =
       req.cookie?.accessToken() ||
