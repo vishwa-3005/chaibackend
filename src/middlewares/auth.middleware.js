@@ -2,7 +2,7 @@ import { ApiError } from "../utils/apiError.js";
 import asyncHandler from "../utils/asyncHandlers.js";
 import jwt from "jsonwebtoken";
 
-const verifyJWT = asyncHandeler(async (req, _, next) => {
+const verifyJWT = asyncHandler(async (req, _, next) => {
   //when param was not used, it was replaced with underscore
   try {
     const token =
@@ -30,4 +30,6 @@ const verifyJWT = asyncHandeler(async (req, _, next) => {
     throw new ApiError(401, error?.message || "Invalid access token !");
   }
 });
+
+export default verifyJWT;
 //req.cookie() -> as we have used app.use(cookieParser())
