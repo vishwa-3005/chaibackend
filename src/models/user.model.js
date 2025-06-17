@@ -56,7 +56,7 @@ userSchema.pre("save", async function (next) {
 }); //hash the password before you save it for security purpose
 
 userSchema.methods.isPasswordCorrect = async function (password) {
-  return await bcrypt.compare(password, this.password);
+  return await bcrypt.compare(this.password, password);
 }; //compares hashed and given password to be same
 
 userSchema.methods.generateAccessToken = function () {

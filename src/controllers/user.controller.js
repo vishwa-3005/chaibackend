@@ -46,7 +46,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   //check for avatar file
   const avtarLocalPath = req.files?.avatar[0]?.path;
-  const coverImageLocalPath = req.files?.coverImage[0]?.path;
+  const coverImageLocalPath = req.files?.coverImage?.[0]?.path || null;
   console.log(avtarLocalPath);
   if (!avtarLocalPath) {
     throw new ApiError(400, "Avatar file is required !");
@@ -94,18 +94,30 @@ const registerUser = asyncHandler(async (req, res) => {
 
 const loginUser = asyncHandler(async (req, res) => {
   //fetch data from req body
-  const { userName, email } = req.body;
+  const { userName, email, password } = req.body;
   //username or email
   if (!userName && !email) {
     throw new ApiError(400, "Username or password is required");
   }
   //find user
+  const conditions = [];
+
+  if (userName) {
+    conditions.push({ userName });
+  }
+
+  if (email) {
+    conditions.push({ email });
+  }
+
   const user = await User.findOne({
-    $or: [userName, email],
+    $or: conditions, //since mongoDb accepts feildnames than raw values
   });
+
   if (!user) {
     throw new ApiError(404, "User not found!");
   }
+  console.log("user found");
   //check for password
   const isPassWordValid = await user.isPasswordCorrect(password);
   if (!isPassWordValid) {
