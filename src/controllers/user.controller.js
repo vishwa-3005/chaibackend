@@ -362,6 +362,73 @@ const removeUserCoverImage = asyncHandler(async (req, res) => {
 });
 
 //complex part - get user channel profile
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+  const { username } = req.params;
+  if (!username) {
+    throw new ApiError(404, "Username is missing");
+  }
+  const channel = await User.aggregate([
+    {
+      $match: {
+        username: username?.toLowerCase(),
+      },
+    }, //stage 1 - find user
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers",
+      },
+    }, //stage 2 - look up for feilds
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribedTo",
+      },
+    },
+    {
+      $addFields: {
+        subscribersCount: {
+          $size: "$subscribers",
+        },
+        channelsSubscribedTOCount: {
+          $size: "$subscribedTo",
+        },
+        isSubscribed: {
+          $cond: {
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        fullName: 1,
+        email: 1,
+        subscribersCount: 1,
+        channelsSubscribedTOCount: 1,
+        avatar: 1,
+        coverImage: 1,
+        email: 1,
+      },
+    },
+  ]);
+
+  if (!channel?.length) {
+    throw new ApiError(404, "Channel does not exist !");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, channel[0], "User fetched succesfully"));
+});
+
+const getWatchHistory = asyncHandler(async (req, res) => {});
 
 export {
   registerUser,
@@ -369,9 +436,12 @@ export {
   logoutUser,
   refreshAccessToken,
   changeCurrentPassword,
+  updateAccountDetails,
   getCurrentUser,
   updateUserAvatar,
   removeUserAvatar,
   removeUserCoverImage,
   updateUserCoverImage,
+  getUserChannelProfile,
+  getWatchHistory,
 };
