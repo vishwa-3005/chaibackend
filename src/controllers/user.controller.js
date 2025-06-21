@@ -5,6 +5,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
 import { pipeline } from "stream";
+import { match } from "assert";
 
 const generateAccessAndRefreshTOken = async (userId) => {
   try {
@@ -70,7 +71,7 @@ const registerUser = asyncHandler(async (req, res) => {
     password,
     userName: userName.toLowerCase(),
   });
-
+  console.log("User created succesfully");
   //remove refreshToken and password
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken"
@@ -118,16 +119,17 @@ const loginUser = asyncHandler(async (req, res) => {
   if (!user) {
     throw new ApiError(404, "User not found!");
   }
-  console.log("user found");
+
   //check for password
   const isPassWordValid = await user.isPasswordCorrect(password);
   if (!isPassWordValid) {
     throw new ApiError(401, "Invalis credentials");
   }
   //access refreshtoken and accesstoken
-  const [accessToken, refreshToken] = await generateAccessAndRefreshTOken(
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTOken(
     user._id
   );
+
   const loggedInUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
@@ -233,7 +235,10 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
 const changeCurrentPassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
-  const user = await User.findById(req.user?._Id);
+  console.log(oldPassword, newPassword);
+
+  const user = await User.findById(req.user?._id);
+
   const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
 
   if (!isPasswordCorrect) {
@@ -251,7 +256,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 const getCurrentUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
-    .json(200, req.user, "current user fetched succesfulyy!");
+    .json(new ApiResponse(200, req.user, "current user fetched succesfulyy!"));
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
@@ -296,7 +301,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
       },
     },
     { new: true }
-  ).select("-password");
+  ).select("-password -refreshToken");
 
   return res
     .status(200)
@@ -321,13 +326,13 @@ const removeUserAvatar = asyncHandler(async (req, res) => {
 
 const updateUserCoverImage = asyncHandler(async (req, res) => {
   const coverImageLocalPath = req.file?.path;
-  if (!avatarLocalPath) {
+  if (!coverImageLocalPath) {
     throw new ApiError(400, "Cover Image is required!");
   }
 
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
-  if (!avatar.url) {
+  if (!coverImage.url) {
     throw new ApiError(400, "Error while uploading file on cloudinary!");
   }
 
@@ -371,9 +376,10 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
   const channel = await User.aggregate([
     {
       $match: {
-        username: username?.toLowerCase(),
+        userName: username,
       },
     }, //stage 1 - find user
+
     {
       $lookup: {
         from: "subscriptions",
@@ -483,8 +489,8 @@ export {
   getCurrentUser,
   updateUserAvatar,
   removeUserAvatar,
+  getUserChannelProfile,
   removeUserCoverImage,
   updateUserCoverImage,
-  getUserChannelProfile,
   getWatchHistory,
 };

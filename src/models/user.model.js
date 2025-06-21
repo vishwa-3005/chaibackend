@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema(
     },
     coverImage: {
       type: String, //claudniry uri
-      required: true,
+      required: false,
     },
 
     watchHistory: [
@@ -56,7 +56,7 @@ userSchema.pre("save", async function (next) {
 }); //hash the password before you save it for security purpose
 
 userSchema.methods.isPasswordCorrect = async function (password) {
-  return await bcrypt.compare(this.password, password);
+  return await bcrypt.compare(password, this.password);
 }; //compares hashed and given password to be same
 
 userSchema.methods.generateAccessToken = function () {
