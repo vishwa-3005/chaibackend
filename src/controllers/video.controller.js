@@ -59,11 +59,49 @@ const publishAVideo = asyncHandler(async (req, res) => {
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   //TODO: get video by id
+  if (!videoId) {
+    throw new ApiError(400, "videoId is missing!");
+  }
+
+  //check for format
+  if (!mongoose.Types.ObjectId.isValid(videoId)) {
+    throw new ApiError(400, "Invalid video id format");
+  }
+
+  const video = await Video.findById(videoId);
+  if (!video) {
+    throw new ApiError(404, "Video not found!");
+  }
+  video.views += 1;
+  await video.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, video, "Video fetched succesfully"));
 });
 
 const updateVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   //TODO: update video details like title, description, thumbnail
+  if (!videoId) {
+    throw new ApiError(404, "videoId not found");
+  }
+
+  //check for format
+  if (!mongoose.Types.ObjectId(videoId)) {
+    throw new ApiError(400, "Invalid videoId format!");
+  }
+  const { title, description } = req.body;
+  const { video, thumbnail } = req.files;
+
+  //find video
+  const _video = await Video.findById(videoId);
+  if (!_video) {
+    throw new ApiError(404, "video not found");
+  }
+
+  if (title) _video.title = title;
+  if (description) _video.description = description;
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {

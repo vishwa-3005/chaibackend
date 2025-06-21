@@ -28,4 +28,6 @@ router.route("/publish-video").post(
   publishAVideo
 );
 
+router.route("/:videoId").get(getVideoById);
+
 export default router;
