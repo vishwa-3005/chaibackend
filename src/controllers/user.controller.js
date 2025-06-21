@@ -28,8 +28,7 @@ const generateAccessAndRefreshTOken = async (userId) => {
 
 const registerUser = asyncHandler(async (req, res) => {
   const { fullName, userName, email, password } = req.body;
-  console.log(email);
-  console.log(req.body);
+
   //data validation
   if (
     [userName, email, fullName, password].some((feild) => feild?.trim() === "")
@@ -47,6 +46,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   //check for avatar file
+  //console.log(req.files);
   const avtarLocalPath = req.files?.avatar[0]?.path;
   const coverImageLocalPath = req.files?.coverImage?.[0]?.path || null;
   console.log(avtarLocalPath);
