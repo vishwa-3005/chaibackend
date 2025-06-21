@@ -6,6 +6,7 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
 import { pipeline } from "stream";
 import { match } from "assert";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshTOken = async (userId) => {
   try {
@@ -370,6 +371,7 @@ const removeUserCoverImage = asyncHandler(async (req, res) => {
 //complex part - get user channel profile
 const getUserChannelProfile = asyncHandler(async (req, res) => {
   const { username } = req.params;
+  console.log(username);
   if (!username) {
     throw new ApiError(404, "Username is missing");
   }
@@ -436,7 +438,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 });
 
 const getWatchHistory = asyncHandler(async (req, res) => {
-  const user = User.aggregate([
+  const channel = await User.aggregate([
     {
       $match: {
         _id: new mongoose.Types.ObjectId(req.user._id),
@@ -477,6 +479,15 @@ const getWatchHistory = asyncHandler(async (req, res) => {
       },
     },
   ]);
+  if (!channel?.length) {
+    throw new ApiError(404, "channel does not exists");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, channel[0], "User channel fetched successfully")
+    );
 });
 
 export {
