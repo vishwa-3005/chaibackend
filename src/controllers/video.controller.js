@@ -5,6 +5,7 @@ import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import asyncHandler from "../utils/asyncHandlers.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import fs from "fs";
 
 const getAllVideos = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
@@ -88,25 +89,75 @@ const updateVideo = asyncHandler(async (req, res) => {
   }
 
   //check for format
-  if (!mongoose.Types.ObjectId(videoId)) {
+  if (!mongoose.Types.ObjectId.isValid(videoId)) {
     throw new ApiError(400, "Invalid videoId format!");
   }
-  const { title, description } = req.body;
-  const { video, thumbnail } = req.files;
 
   //find video
-  const _video = await Video.findById(videoId);
-  if (!_video) {
+  const video = await Video.findById(videoId);
+  if (!video) {
     throw new ApiError(404, "video not found");
   }
 
-  if (title) _video.title = title;
-  if (description) _video.description = description;
+  //check for req.user is owner
+  if (video.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "You are not allowed to update this video");
+  }
+
+  const { title, description } = req.body;
+  const videoLocalPath = req.files?.video?.[0].path;
+  const thumbnailLocalPath = req.files?.thumbnail?.[0].path;
+
+  //let videoUrl, thumbnailUrl;
+  if (videoLocalPath) {
+    const videoUpload = await uploadOnCloudinary(videoLocalPath);
+    video.videoFile = videoUpload.secure_url;
+  }
+  if (thumbnailLocalPath) {
+    const thumbnailUpload = await uploadOnCloudinary(thumbnailLocalPath);
+    video.thumbnail = thumbnailUpload.secure_url;
+  }
+
+  //find video
+  if (title) video.title = title;
+  if (description) video.description = description;
+
+  await video.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, video, "Video updated successfully!"));
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
   //TODO: delete video
+  if (!videoId) {
+    throw new ApiError(400, "Missing required parameter: videoId");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(videoId)) {
+    throw new ApiError(400, "Invalid videoId format");
+  }
+
+  const video = await Video.findById(videoId);
+
+  if (!video) {
+    throw new ApiError(404, "Video not found!");
+  }
+
+  //check for onwer
+  if (video.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "unauthorised delete action!");
+  }
+
+  //const deleteResponse = await Video.deleteOne({_id : video._id});
+  const result = await video.deleteOne();
+  console.log(result);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "video deleted successfully !"));
 });
 
 const togglePublishStatus = asyncHandler(async (req, res) => {

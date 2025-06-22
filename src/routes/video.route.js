@@ -29,5 +29,19 @@ router.route("/publish-video").post(
 );
 
 router.route("/:videoId").get(getVideoById);
+router.route("/:videoId").patch(
+  upload.fields([
+    {
+      name: "video",
+      maxCount: 1,
+    },
+    {
+      name: "thumbnail",
+      maxCount: 1,
+    },
+  ]),
+  updateVideo
+);
 
+router.route("/:videoId").delete(deleteVideo);
 export default router;
