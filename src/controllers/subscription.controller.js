@@ -107,5 +107,59 @@ const getSubscribers = asyncHandler(async (req, res) => {
 });
 
 //3.get subscribed channels
-const getSubscribedChannels = asyncHandler(async (req, res) => {});
+const getSubscribedChannels = asyncHandler(async (req, res) => {
+  const { channelId } = req.params;
+
+  if (!channelId) {
+    throw new ApiError(404, "Channel ID is missing!");
+  }
+
+  const channel = await User.findById(channelId);
+  if (!channel) {
+    throw new ApiError(404, "Channel not found");
+  }
+
+  const subscribedChannels = await Subscription.aggregate([
+    {
+      $match: {
+        subscriber: new mongoose.Types.ObjectId(channelId),
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "channel",
+        foreignField: "_id",
+        as: "subscribedChannelDetails",
+      },
+    },
+    {
+      $unwind: "$subscribedChannelDetails",
+    },
+    {
+      $project: {
+        _id: 0,
+        channelName: "$subscribedChannelDetails.userName",
+        avatar: "$subscribedChannelDetails.avatar",
+        coverImage: "$subscribedChannelDetails.coverImage",
+      },
+    },
+  ]);
+
+  if (subscribedChannels.length > 0) {
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { result: subscribedChannels },
+          "subscribedChannels fetched successfully!"
+        )
+      );
+  } else {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {}, "No subscribedChannels found"));
+  }
+});
 export { toggleSubscription, getSubscribers, getSubscribedChannels };
