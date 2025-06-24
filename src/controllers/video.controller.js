@@ -10,6 +10,96 @@ import fs from "fs";
 const getAllVideos = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
   //TODO: get all videos based on query, sort, pagination
+  const getAllVideos = asyncHandler(async (req, res) => {
+    // Extract query parameters with defaults
+    const {
+      page = 1,
+      limit = 10,
+      query = "",
+      sortBy = "createdAt",
+      sortType = "desc",
+      userId,
+    } = req.query;
+
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // ------------------ Build Match Stage ------------------
+    const matchStage = {
+      isPublished: true,
+    };
+
+    if (userId) {
+      matchStage.owner = userId;
+    }
+
+    if (query) {
+      matchStage.$or = [
+        { title: { $regex: query, $options: "i" } },
+        { description: { $regex: query, $options: "i" } },
+      ];
+    }
+
+    // ------------------ Build Sort Stage ------------------
+    const sortOrder = sortType === "asc" ? 1 : -1;
+    const sortStage = {
+      [sortBy]: sortOrder,
+    };
+
+    // ------------------ Run Aggregation ------------------
+    const videos = await Video.aggregate([
+      { $match: matchStage },
+      { $sort: sortStage },
+      { $skip: skip },
+      { $limit: limitNum },
+      {
+        $lookup: {
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "owner",
+        },
+      },
+      {
+        $unwind: "$owner",
+      },
+      {
+        $project: {
+          title: 1,
+          description: 1,
+          videoFile: 1,
+          thumbnail: 1,
+          views: 1,
+          createdAt: 1,
+          duration: 1,
+          isPublished: 1,
+          owner: {
+            _id: 1,
+            username: 1,
+            avatar: 1,
+          },
+        },
+      },
+    ]);
+
+    // ------------------ Count Total ------------------
+    const total = await Video.countDocuments(matchStage);
+
+    // ------------------ Send Response ------------------
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          total,
+          page: pageNum,
+          limit: limitNum,
+          results: videos,
+        },
+        "Videos fetched successfully"
+      )
+    );
+  });
 });
 
 const publishAVideo = asyncHandler(async (req, res) => {
