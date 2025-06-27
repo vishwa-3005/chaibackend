@@ -1,11 +1,11 @@
 import mongoose, { Schema } from "mongoose";
-import { Vedio } from "./vedio.model";
+import { Video } from "../models/video.model.js";
 
 const likeSchema = new Schema(
   {
-    vedio: {
+    video: {
       type: Schema.Types.ObjectId,
-      ref: "Vedio",
+      ref: "Video",
     },
     comment: {
       type: Schema.Types.ObjectId,
