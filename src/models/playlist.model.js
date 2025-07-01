@@ -10,7 +10,7 @@ const playlistSchema = Schema(
       type: String,
       required: true,
     },
-    vedios: [
+    videos: [
       {
         type: Schema.Types.ObjectId,
         ref: "Vedio",
