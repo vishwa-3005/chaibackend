@@ -454,4 +454,4 @@ const engagementSummary = asyncHandler(async (req, res) => {
     );
 });
 
-export { getProfile, channelStatistics, recentActivities };
+export { getProfile, channelStatistics, recentActivities, engagementSummary };
