@@ -228,8 +228,230 @@ const channelStatistics = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, result, "channel stats fetched successfully"));
 });
 
-//3.recent activity
+//3.recent activity - recent comments, videos, tweets
+const recentActivities = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  if (!userId) {
+    throw new ApiError(400, "user ID is missing from request params");
+  }
 
-//4.engagement summary
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new ApiError(400, "user ID is not of mongoose ObjectId type");
+  }
+  const user = await User.findById(userId);
 
-export { getProfile, channelStatistics };
+  if (!user) {
+    throw new ApiError(404, "User not found !");
+  }
+
+  if (req.user._id.toString() !== userId) {
+    throw new ApiError(
+      403,
+      "Unauthorization: You are not allowed to see channel stats"
+    );
+  }
+
+  //recent videos : 10
+  const recentVideos = await Video.aggregate([
+    {
+      $match: {
+        owner: userId,
+      },
+    },
+    {
+      $sort: -1,
+    },
+    {
+      $limit: 10,
+    },
+  ]);
+  //recent comments : 10
+  const recentComments = await Video.aggregate([
+    {
+      $match: {
+        owner: userId,
+      },
+    },
+    {
+      $lookup: {
+        from: "comments",
+        localField: "_id",
+        foreignField: "video",
+        as: "comments",
+      },
+    },
+    {
+      $unwind: "$comments",
+    },
+    {
+      $sort: -1,
+    },
+    {
+      $limit: 10,
+    },
+  ]);
+
+  //recent subscribers: 10
+  const recentSubscribers = await Subscription.aggregate([
+    {
+      $match: {
+        channel: userId,
+      },
+    },
+    {
+      $sort: -1,
+    },
+    {
+      $project: {
+        subscriber: 1,
+      },
+    },
+    {
+      $limit: 10,
+    },
+  ]);
+  //recent tweets: 10
+  const recentTweets = await Tweet.aggregate([
+    {
+      $match: {
+        owner: userId,
+      },
+    },
+    {
+      $sort: -1,
+    },
+    {
+      $limit: 10,
+    },
+  ]);
+
+  const result = {
+    videos: recentVideos,
+    comments: recentComments,
+    subscribers: recentSubscribers,
+    tweets: recentTweets,
+  };
+  return res
+    .status(200)
+    .json(200, result, "Recent activity fetched successfully");
+});
+
+//4.engagement summary - most liked video , comment, tweet
+const engagementSummary = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  if (!userId) {
+    throw new ApiError(400, "user ID is missing from request params");
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new ApiError(400, "user ID is not of mongoose ObjectId type");
+  }
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new ApiError(404, "User not found !");
+  }
+
+  if (req.user._id.toString() !== userId) {
+    throw new ApiError(
+      403,
+      "Unauthorization: You are not allowed to see channel stats"
+    );
+  }
+
+  const mostLikedVideos = await Video.aggregate([
+    {
+      $match: {
+        owner: userId,
+      },
+    },
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "video",
+        as: "likes",
+      },
+    },
+    {
+      $addFields: {
+        totalLikes: { $size: "$likes" },
+      },
+    },
+    {
+      $sort: {
+        totalLikes: -1,
+      },
+    },
+    {
+      $limit: 3,
+    },
+  ]);
+
+  const mostLikedTweet = await Tweet.aggregate([
+    {
+      $match: {
+        owner: userId,
+      },
+    },
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "tweet",
+        as: "likes",
+      },
+    },
+    {
+      $addFields: {
+        totalLikes: { $size: "$likes" },
+      },
+    },
+    {
+      $sort: { totalLikes: -1 },
+    },
+    {
+      $limit: 3,
+    },
+  ]);
+
+  const mostLikedComment = await Comment.aggregate([
+    {
+      $match: userId,
+    },
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "comment",
+        as: "likes",
+      },
+    },
+    {
+      $addFields: {
+        totalLikes: { $size: "$likes" },
+      },
+    },
+    {
+      $sort: {
+        totalLikes: -1,
+      },
+    },
+    {
+      $limit: 3,
+    },
+  ]);
+  const result = {
+    comments: mostLikedComment,
+    videos: mostLikedVideos,
+    tweets: mostLikedTweet,
+  };
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, result, "Engagement summmary fecthed successfully")
+    );
+});
+
+export { getProfile, channelStatistics, recentActivities };
