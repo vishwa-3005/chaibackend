@@ -165,10 +165,71 @@ const channelStatistics = asyncHandler(async (req, res) => {
   const totalTweetLikeCount = totalTweetLikes[0]?.totalLikes || 0;
 
   //total comments
+  const totalComments = await Video.aggregate([
+    {
+      $match: {
+        owner: userId,
+      },
+    },
+    {
+      $lookup: {
+        from: "comments",
+        localField: "_id",
+        foreignField: "video",
+        as: "comments",
+      },
+    },
+    {
+      $project: {
+        commentsOnVideo: { $size: "$comments" },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        totalComments: {
+          $sum: "$commentsOnVideo",
+        },
+      },
+    },
+  ]);
+  const totalCommentsCount = totalComments[0]?.totalComments || 0;
 
   //total tweets
+  const totalTweets = await Tweet.aggregate([
+    {
+      $match: {
+        owner: userId,
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        count: {
+          $sum: 1,
+        },
+      },
+    },
+  ]);
+  const totalTweetsCount = totalTweets[0]?.count || 0;
+
+  const result = {
+    netSubscribers: subscribersCount,
+    netViews: totalViewsCount,
+    netVideos: totalVideosCount,
+    netVideoLikes: totalVideoLikesCount,
+    netTweetLikes: totalTweetLikeCount,
+    netComments: totalCommentsCount,
+    netTweets: totalTweetsCount,
+  };
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, result, "channel stats fetched successfully"));
 });
+
 //3.recent activity
+
 //4.engagement summary
 
 export { getProfile, channelStatistics };
