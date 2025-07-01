@@ -217,3 +217,12 @@ const updatePlaylist = asyncHandler(async (req, res) => {
       new ApiResponse(200, playList, "Video added to playlist successfully")
     );
 });
+
+export {
+  createPlaylist,
+  getUserPlaylist,
+  getPlayListById,
+  removeVideoFromPlaylist,
+  deletePlayList,
+  updatePlaylist,
+};
