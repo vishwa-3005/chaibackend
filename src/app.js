@@ -38,6 +38,8 @@ import tweetRouter from "./routes/tweet.routes.js";
 import likeRouter from "./routes/like.routes.js";
 import playlistRouter from "./routes/playList.routes.js";
 import subscriptionRouter from "./routes/subscription.routes.js";
+import healthCheckRouter from "./routes/healthCheck.routes.js";
+import dashboardRouter from "./routes/dashboard.routes.js";
 
 //routes declaration
 //why app.use -> as router is in diff dir that we will need router for using it
@@ -49,5 +51,6 @@ app.use("api/v1/likes", likeRouter); //https://api/v1/likes
 app.use("api/v1/playlists", playlistRouter); //https://api/v1/playlists
 app.use("api/v1/subcriptions", subscriptionRouter); //https://api/v1/subcriptions
 app.use("api/v1/tweets", tweetRouter); //https://api/v1/tweets
-
+app.use("api/v1/dashboard", dashboardRouter); //https://api/v1/dashboard
+app.use("api/v1/healthCheck", healthCheckRouter); //https://api/v1/healthCheck
 export { app };
