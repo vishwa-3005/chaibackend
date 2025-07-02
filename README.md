@@ -118,7 +118,9 @@ JWT_EXPIRY=1d
 REFRESH_TOKEN_SECRET=your_refresh_token_secret
 REFRESH_TOKEN_EXPIRY=7d
 
-# Multer or cloud storage keys (if needed later)
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_SECRET=your_api_secret
+CLOUDINARY_API_KEY=you_api_key
 ```
 
 ### 4. Start Development Server
