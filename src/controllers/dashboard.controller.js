@@ -17,7 +17,7 @@ const getProfile = asyncHandler(async (req, res) => {
   }
 
   const user = await User.findById(userId).select(
-    "-password -refreshToken -watchHistory -"
+    "-password -refreshToken -watchHistory"
   );
 
   if (!user) {
@@ -62,7 +62,7 @@ const channelStatistics = asyncHandler(async (req, res) => {
   const totalSubscribers = await User.aggregate([
     {
       $match: {
-        channel: userId,
+        channel: new mongoose.Types.ObjectId(userId),
       },
     },
     {
@@ -75,7 +75,7 @@ const channelStatistics = asyncHandler(async (req, res) => {
   const totalViews = await Video.aggregate([
     {
       $match: {
-        owner: userId,
+        owner: new mongoose.Types.ObjectId(userId),
       },
     },
     {
@@ -93,7 +93,7 @@ const channelStatistics = asyncHandler(async (req, res) => {
   const totalVideos = await Video.aggregate([
     {
       $match: {
-        owner: userId,
+        owner: new mongoose.Types.ObjectId(userId),
       },
     },
     {
@@ -111,7 +111,7 @@ const channelStatistics = asyncHandler(async (req, res) => {
   const totalVideoLikes = await Video.aggregate([
     {
       $match: {
-        owner: userId,
+        owner: new mongoose.Types.ObjectId(userId),
       },
     },
     {
@@ -139,7 +139,7 @@ const channelStatistics = asyncHandler(async (req, res) => {
   const totalTweetLikes = await Tweet.aggregate([
     {
       $match: {
-        owner: userId,
+        owner: new mongoose.Types.ObjectId(userId),
       },
     },
     {
@@ -168,7 +168,7 @@ const channelStatistics = asyncHandler(async (req, res) => {
   const totalComments = await Video.aggregate([
     {
       $match: {
-        owner: userId,
+        owner: new mongoose.Types.ObjectId(userId),
       },
     },
     {
@@ -255,7 +255,7 @@ const recentActivities = asyncHandler(async (req, res) => {
   const recentVideos = await Video.aggregate([
     {
       $match: {
-        owner: userId,
+        owner: new mongoose.Types.ObjectId(userId),
       },
     },
     {
@@ -269,7 +269,7 @@ const recentActivities = asyncHandler(async (req, res) => {
   const recentComments = await Video.aggregate([
     {
       $match: {
-        owner: userId,
+        owner: new mongoose.Types.ObjectId(userId),
       },
     },
     {
@@ -295,7 +295,7 @@ const recentActivities = asyncHandler(async (req, res) => {
   const recentSubscribers = await Subscription.aggregate([
     {
       $match: {
-        channel: userId,
+        channel: new mongoose.Types.ObjectId(userId),
       },
     },
     {
@@ -314,7 +314,7 @@ const recentActivities = asyncHandler(async (req, res) => {
   const recentTweets = await Tweet.aggregate([
     {
       $match: {
-        owner: userId,
+        owner: new mongoose.Types.ObjectId(userId),
       },
     },
     {
@@ -362,7 +362,7 @@ const engagementSummary = asyncHandler(async (req, res) => {
   const mostLikedVideos = await Video.aggregate([
     {
       $match: {
-        owner: userId,
+        owner: new mongoose.Types.ObjectId(userId),
       },
     },
     {
@@ -391,7 +391,7 @@ const engagementSummary = asyncHandler(async (req, res) => {
   const mostLikedTweet = await Tweet.aggregate([
     {
       $match: {
-        owner: userId,
+        owner: new mongoose.Types.ObjectId(userId),
       },
     },
     {
@@ -417,7 +417,7 @@ const engagementSummary = asyncHandler(async (req, res) => {
 
   const mostLikedComment = await Comment.aggregate([
     {
-      $match: userId,
+      $match: new mongoose.Types.ObjectId(userId),
     },
     {
       $lookup: {
