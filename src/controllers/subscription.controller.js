@@ -51,13 +51,13 @@ const toggleSubscription = asyncHandler(async (req, res) => {
 });
 //2.get all subscribers
 const getSubscribers = asyncHandler(async (req, res) => {
-  const { channelId } = req.params;
+  const { subscriberId } = req.params;
 
-  if (!channelId) {
-    throw new ApiError(404, "Channel ID is missing!");
+  if (!subscriberId) {
+    throw new ApiError(400, "Channel ID is missing!");
   }
 
-  const channel = await User.findById(channelId);
+  const channel = await User.findById(subscriberId);
   if (!channel) {
     throw new ApiError(404, "Channel not found");
   }
@@ -65,7 +65,7 @@ const getSubscribers = asyncHandler(async (req, res) => {
   const subscribers = await Subscription.aggregate([
     {
       $match: {
-        channel: new mongoose.Types.ObjectId(channelId),
+        channel: new mongoose.Types.ObjectId(subscriberId),
       },
     },
     {
