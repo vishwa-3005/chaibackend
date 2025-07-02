@@ -1,5 +1,4 @@
-import mongoose, { Schema, setDriver } from "mongoose";
-import { User } from "./user.model";
+import mongoose, { Schema } from "mongoose";
 
 const subscriptionSchema = mongoose.Schema({
   subscriber: {

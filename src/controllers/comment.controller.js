@@ -3,8 +3,8 @@ import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { Video } from "../models/video.model.js";
 import { User } from "../models/user.model.js";
-import { UploadStream } from "cloudinary";
-import Comment from "../models/comment.model.js";
+
+import { Comment } from "../models/comment.model.js";
 import mongoose from "mongoose";
 //1.get all comment for a video
 const getAllComments = asyncHandler(async (req, res) => {
