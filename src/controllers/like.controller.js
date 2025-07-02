@@ -11,7 +11,7 @@ import mongoose from "mongoose";
 const getAllLikedvideos = asyncHandler(async (req, res) => {
   const userId = req.user._id;
 
-  const likedvideos = await likes.aggregate([
+  const likedvideos = await Like.aggregate([
     {
       $match: {
         comment: null,
@@ -105,7 +105,7 @@ const toggleLikeTweet = asyncHandler(async (req, res) => {
     tweet: tweetId,
     likedBy: userId,
   });
-  if (isCommentLiked) {
+  if (isTweetLiked) {
     await Like.deleteOne({ _id: isTweetLiked._id });
 
     return res
@@ -131,7 +131,7 @@ const toggleLikevideo = asyncHandler(async (req, res) => {
     throw new ApiError(400, "videoId id is missing in params");
   }
 
-  const video = await Tweet.findById(videoId);
+  const video = await Video.findById(videoId);
   if (!video) {
     throw new ApiError(404, "video not found!");
   }
@@ -159,7 +159,7 @@ const toggleLikevideo = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .json(new ApiResponse(200, likedvideo, "tweet liked succesfully"));
+      .json(new ApiResponse(200, likedvideo, "Video liked succesfully"));
   }
 });
 
