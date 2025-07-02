@@ -259,7 +259,9 @@ const recentActivities = asyncHandler(async (req, res) => {
       },
     },
     {
-      $sort: -1,
+      $sort: {
+        createdAt: -1,
+      },
     },
     {
       $limit: 10,
@@ -284,7 +286,9 @@ const recentActivities = asyncHandler(async (req, res) => {
       $unwind: "$comments",
     },
     {
-      $sort: -1,
+      $sort: {
+        createdAt: -1,
+      },
     },
     {
       $limit: 10,
@@ -299,7 +303,9 @@ const recentActivities = asyncHandler(async (req, res) => {
       },
     },
     {
-      $sort: -1,
+      $sort: {
+        createdAt: -1,
+      },
     },
     {
       $project: {
@@ -318,7 +324,9 @@ const recentActivities = asyncHandler(async (req, res) => {
       },
     },
     {
-      $sort: -1,
+      $sort: {
+        createdAt: -1,
+      },
     },
     {
       $limit: 10,
@@ -333,7 +341,7 @@ const recentActivities = asyncHandler(async (req, res) => {
   };
   return res
     .status(200)
-    .json(200, result, "Recent activity fetched successfully");
+    .json(new ApiResponse(200, result, "Recent activity fetched successfully"));
 });
 
 //4.engagement summary - most liked video , comment, tweet
@@ -417,7 +425,9 @@ const engagementSummary = asyncHandler(async (req, res) => {
 
   const mostLikedComment = await Comment.aggregate([
     {
-      $match: new mongoose.Types.ObjectId(userId),
+      $match: {
+        owner: new mongoose.Types.ObjectId(userId),
+      },
     },
     {
       $lookup: {

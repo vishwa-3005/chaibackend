@@ -14,6 +14,6 @@ router.use(verifyJWT);
 router.route("/profile/:userId").get(getProfile);
 router.route("/channel-stats/:userId").get(channelStatistics);
 router.route("/recent-activity/:userId").get(recentActivities);
-router.route("/summar/:userId").get(engagementSummary);
+router.route("/summary/:userId").get(engagementSummary);
 
 export default router;
