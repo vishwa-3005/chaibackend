@@ -46,11 +46,11 @@ import dashboardRouter from "./routes/dashboard.routes.js";
 
 app.use("/api/v1/users", userRouter); //https://api/v1/users/
 app.use("/api/v1/videos", videoRouter); //https://api/v1/videos
-app.use("api/v1/comments", commentRouter); //https://api/v1/comments
-app.use("api/v1/likes", likeRouter); //https://api/v1/likes
-app.use("api/v1/playlists", playlistRouter); //https://api/v1/playlists
-app.use("api/v1/subcriptions", subscriptionRouter); //https://api/v1/subcriptions
-app.use("api/v1/tweets", tweetRouter); //https://api/v1/tweets
-app.use("api/v1/dashboard", dashboardRouter); //https://api/v1/dashboard
-app.use("api/v1/healthCheck", healthCheckRouter); //https://api/v1/healthCheck
+app.use("/api/v1/comments", commentRouter); //https://api/v1/comments
+app.use("/api/v1/likes", likeRouter); //https://api/v1/likes
+app.use("/api/v1/playlists", playlistRouter); //https://api/v1/playlists
+app.use("/api/v1/subcriptions", subscriptionRouter); //https://api/v1/subcriptions
+app.use("/api/v1/tweets", tweetRouter); //https://api/v1/tweets
+app.use("/api/v1/dashboard", dashboardRouter); //https://api/v1/dashboard
+app.use("/api/v1/healthCheck", healthCheckRouter); //https://api/v1/healthCheck
 export { app };
