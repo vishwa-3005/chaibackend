@@ -74,7 +74,7 @@ const updateTweet = asyncHandler(async (req, res) => {
     },
     { new: true }
   );
-  await updateTweet.save();
+  await updatedTweet.save();
   return res
     .status(200)
     .json(new ApiResponse(200, updatedTweet, "Tweet updated successfully"));
